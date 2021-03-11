@@ -2,9 +2,18 @@ from pypdevs.DEVS import AtomicDEVS
 from pypdevs.infinity import INFINITY
 
 
+class CellState(object):
+    def __init__(self, value):
+        self.temperature = value
+
+    def toCellState(self):
+        return self.temperature
+
+
 class Cell(AtomicDEVS):
     def __init__(self, x, y):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x,y))
+        self.temp = CellState(25)
         self.state = "initial"
         self.elapsed = 0.0
 
@@ -20,11 +29,13 @@ class Cell(AtomicDEVS):
         if self.state == "initial":
             return "unburned"
         elif self.state == "burning":
+            self.temp.temperature = 30
             return "burned"
 
     def extTransition(self, inputs):
         inp = inputs[self.inputs]
         if inp == "show_burned":
+            self.temp.temperature = 500
             return "burning"
         return self.state
 
@@ -47,6 +58,7 @@ class Cell(AtomicDEVS):
 class BurningCell(AtomicDEVS):
     def __init__(self, x, y):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x,y))
+        self.temp = CellState(25)
         self.state = "initial"
         self.elapsed = 0.0
         self.temperature = 50
@@ -62,8 +74,10 @@ class BurningCell(AtomicDEVS):
         if self.state == "initial":
             return "unburned"
         elif self.state == "unburned":
+            self.temp.temperature = 500
             return "burning"
         elif self.state == "burning":
+            self.temp.temperature = 30
             return "burned"
 
     def outputFnc(self):

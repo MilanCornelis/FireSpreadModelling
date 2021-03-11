@@ -17,8 +17,6 @@ class CellSpace(CoupledDEVS):
         self.cell2 = self.addSubModel(Cell(1,0))
         self.cell3 = self.addSubModel(Cell(1,1))
 
-        # Test
-
         self.connectPorts(self.cell0.outputs, self.cell1.inputs)
         self.connectPorts(self.cell0.outputs, self.cell2.inputs)
         self.connectPorts(self.cell1.outputs, self.cell3.inputs)
