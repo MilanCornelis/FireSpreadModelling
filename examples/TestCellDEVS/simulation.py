@@ -4,10 +4,9 @@ from coupledModel import CellSpace
 
 # Cell devs doesn't work
 sim = Simulator(CellSpace())
-sim.cell = True
-sim.cell_file = "celltrace"
-sim.cell_multifile = False
-sim.setVerbose()
+
+#sim.setVerbose()
 sim.setTerminationTime(2000)
-sim.setClassicDEVS()
+#sim.setClassicDEVS()
+sim.setCell(True, 0, 0, cell_file="celltrace", multifile=False)
 sim.simulate()
