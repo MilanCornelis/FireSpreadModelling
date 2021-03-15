@@ -3,8 +3,9 @@ from pypdevs.infinity import INFINITY
 
 
 class CellState(object):
-    def __init__(self, value):
-        self.temperature = value
+    def __init__(self, temp):
+        self.temperature = temp
+        self.phase = "initial"
 
     def toCellState(self):
         return self.temperature
@@ -13,8 +14,7 @@ class CellState(object):
 class Cell(AtomicDEVS):
     def __init__(self, x, y):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x,y))
-        self.temp = CellState(25)
-        self.state = "initial"
+        self.state = CellState(25)
         self.elapsed = 0.0
 
         # Position of the cell
@@ -26,29 +26,31 @@ class Cell(AtomicDEVS):
         self.outputs = self.addOutPort("outT")
 
     def intTransition(self):
-        if self.state == "initial":
-            return "unburned"
+        if self.state.phase == "initial":
+            self.state.phase = "unburned"
+            return self.state
         elif self.state == "burning":
-            self.temp.temperature = 30
-            return "burned"
+            self.state.phase = "burned"
+            self.state.temperature = 50
+            return self.state
 
     def extTransition(self, inputs):
         inp = inputs[self.inputs]
         if inp == "show_burned":
-            self.temp.temperature = 500
-            return "burning"
+            self.state.phase = "burning"
+            self.state.temperature = 250
         return self.state
 
     def outputFnc(self):
-        if self.state == "initial":
+        if self.state.phase == "initial":
             return {self.outputs: "show_unburned"}
-        elif self.state == "unburned":
+        elif self.state.phase == "unburned":
             return {self.outputs: "show_burning"}
-        elif self.state == "burning":
+        elif self.state.phase == "burning":
             return {self.outputs: "show_burned"}
 
     def timeAdvance(self):
-        state = self.state
+        state = self.state.phase
         return {"initial": 0,
                 "unburned": INFINITY,
                 "burning": 200,
@@ -58,10 +60,8 @@ class Cell(AtomicDEVS):
 class BurningCell(AtomicDEVS):
     def __init__(self, x, y):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x,y))
-        self.temp = CellState(25)
-        self.state = "initial"
+        self.state = CellState(25)
         self.elapsed = 0.0
-        self.temperature = 50
 
         # Position of the cell
         self.x = x
@@ -71,26 +71,29 @@ class BurningCell(AtomicDEVS):
         self.outputs = self.addOutPort("outT")
 
     def intTransition(self):
-        if self.state == "initial":
-            return "unburned"
-        elif self.state == "unburned":
-            self.temp.temperature = 500
-            return "burning"
-        elif self.state == "burning":
-            self.temp.temperature = 30
-            return "burned"
+        if self.state.phase == "initial":
+            self.state.phase = "unburned"
+            return self.state
+        elif self.state.phase == "unburned":
+            self.state.temperature = 250
+            self.state.phase = "burning"
+            return self.state
+        elif self.state.phase == "burning":
+            self.state.temperature = 50
+            self.state.phase = "burned"
+            return self.state
 
     def outputFnc(self):
-        if self.state == "initial":
+        if self.state.phase == "initial":
             return {self.outputs: "show_unburned"}
-        elif self.state == "unburned":
+        elif self.state.phase == "unburned":
             return {self.outputs: "show_burning"}
-        elif self.state == "burning":
+        elif self.state.phase == "burning":
             return {self.outputs: "show_burned"}
 
     def timeAdvance(self):
-        state = self.state
+        state = self.state.phase
         return {"initial": 0,
-                "unburned": 500,
+                "unburned": 300,
                 "burning": 100,
                 "burned": INFINITY}[state]

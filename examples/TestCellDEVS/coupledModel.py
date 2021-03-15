@@ -4,7 +4,7 @@ from model import Cell, BurningCell
 
 class CellSpace(CoupledDEVS):
     def __init__(self):
-        CoupledDEVS.__init__(self, "FireSpread")
+        CoupledDEVS.__init__(self,"FireSpread")
 
         # Cell Space
         # |2| ---> |3|
