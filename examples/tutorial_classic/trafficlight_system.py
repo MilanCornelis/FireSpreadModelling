@@ -26,7 +26,7 @@ class TrafficLightSystem(CoupledDEVS):
 ### Experiment
 from pypdevs.simulator import Simulator
 sim = Simulator(TrafficLightSystem())
-sim.setVerbose()
+#sim.setVerbose()
 sim.setTerminationTime(1000)
 sim.setClassicDEVS()
 sim.simulate()

@@ -2,10 +2,18 @@ from pypdevs.DEVS import AtomicDEVS
 from pypdevs.infinity import INFINITY
 
 
+def convert(s):
+    new = ""
+    for x in s:
+        new += x
+    return new
+
+
 class CellState(object):
     def __init__(self, temp):
         self.temperature = temp
         self.phase = "initial"
+        self.elapsed = 0.0
 
     def toCellState(self):
         return self.temperature
@@ -15,7 +23,6 @@ class Cell(AtomicDEVS):
     def __init__(self, x, y):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x,y))
         self.state = CellState(25)
-        self.elapsed = 0.0
 
         # Position of the cell
         self.x = x
@@ -28,14 +35,16 @@ class Cell(AtomicDEVS):
     def intTransition(self):
         if self.state.phase == "initial":
             self.state.phase = "unburned"
+        elif self.state.phase == "unburned":
             return self.state
-        elif self.state == "burning":
+        elif self.state.phase == "burning":
             self.state.phase = "burned"
             self.state.temperature = 50
-            return self.state
+        return self.state
 
     def extTransition(self, inputs):
         inp = inputs[self.inputs]
+        inp = convert(inp)
         if inp == "show_burned":
             self.state.phase = "burning"
             self.state.temperature = 250
@@ -52,8 +61,8 @@ class Cell(AtomicDEVS):
     def timeAdvance(self):
         state = self.state.phase
         return {"initial": 0,
-                "unburned": INFINITY,
-                "burning": 200,
+                "unburned": 1,
+                "burning": 10,
                 "burned": INFINITY}[state]
 
 
@@ -61,7 +70,6 @@ class BurningCell(AtomicDEVS):
     def __init__(self, x, y):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x,y))
         self.state = CellState(25)
-        self.elapsed = 0.0
 
         # Position of the cell
         self.x = x
@@ -73,15 +81,13 @@ class BurningCell(AtomicDEVS):
     def intTransition(self):
         if self.state.phase == "initial":
             self.state.phase = "unburned"
-            return self.state
         elif self.state.phase == "unburned":
             self.state.temperature = 250
             self.state.phase = "burning"
-            return self.state
         elif self.state.phase == "burning":
             self.state.temperature = 50
             self.state.phase = "burned"
-            return self.state
+        return self.state
 
     def outputFnc(self):
         if self.state.phase == "initial":
@@ -94,6 +100,6 @@ class BurningCell(AtomicDEVS):
     def timeAdvance(self):
         state = self.state.phase
         return {"initial": 0,
-                "unburned": 300,
-                "burning": 100,
+                "unburned": 10,
+                "burning": 5,
                 "burned": INFINITY}[state]
