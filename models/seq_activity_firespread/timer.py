@@ -19,6 +19,7 @@ def runFunc(scheduler):
             getattr(sim, scheduler)()
             sim.setTerminationTime(150)
             start = time.time()
+            sim.setCell(50, 50, cell_file="celltrace-%05d", multifile=True)
             sim.simulate()
             total += (time.time() - start)
         # Take the square of size, as we have this many cells instead of only 'size' cells
