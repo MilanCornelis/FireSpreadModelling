@@ -20,4 +20,4 @@ class CellSpace(CoupledDEVS):
         self.connectPorts(self.cell0.outputs, self.cell1.inputs)
         #self.connectPorts(self.cell0.outputs, self.cell2.inputs)
         self.connectPorts(self.cell1.outputs, self.cell3.inputs)
-        #self.connectPorts(self.cell2.outputs, self.cell3.inputs)
+        self.connectPorts(self.cell3.outputs, self.cell2.inputs)

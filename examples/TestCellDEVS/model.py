@@ -33,6 +33,7 @@ class Cell(AtomicDEVS):
         self.outputs = self.addOutPort("outT")
 
     def intTransition(self):
+        self.state.elapsed += self.timeAdvance()
         if self.state.phase == "initial":
             self.state.phase = "unburned"
         elif self.state.phase == "unburned":
@@ -79,6 +80,7 @@ class BurningCell(AtomicDEVS):
         self.outputs = self.addOutPort("outT")
 
     def intTransition(self):
+        self.state.elapsed += self.timeAdvance()
         if self.state.phase == "initial":
             self.state.phase = "unburned"
         elif self.state.phase == "unburned":
