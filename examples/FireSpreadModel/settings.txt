@@ -5,4 +5,4 @@ burn_x: 8
 burn_y: 5
 temperature: 100
 wind_speed: 50
-wind_dir: 90
+wind_dir: 0

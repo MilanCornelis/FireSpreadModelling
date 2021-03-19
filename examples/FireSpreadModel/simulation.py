@@ -12,6 +12,8 @@ temperature = int(config.get("myvars", "temperature"))
 wind_speed = int(config.get("myvars", "wind_speed"))
 wind_dir = int(config.get("myvars", "wind_dir"))
 
+CellSpace(x, y, burn_x, burn_y, temperature)
+
 sim = Simulator(CellSpace(x, y, burn_x, burn_y, temperature))
 sim.setTerminationTime(100)
 sim.setCell(x, y, cell_file="./simout/celltrace", multifile=False)

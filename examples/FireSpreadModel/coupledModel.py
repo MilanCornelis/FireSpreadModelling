@@ -6,7 +6,7 @@ class CellSpace(CoupledDEVS):
     def __init__(self, x_max, y_max, burn_x, burn_y, temperature):
         CoupledDEVS.__init__(self, "FireSpread")
 
-        # Create all cells
+        # Create the cell space
         cells = []
         for x in range(x_max):
             row = []
@@ -17,14 +17,22 @@ class CellSpace(CoupledDEVS):
                     row.append(self.addSubModel(Cell(x, y, temperature)))
             cells.append(row)
 
-        # Connect the cells to create a cell space
+        # Connect all the cells in the cell space according to the moore neighborhood
         for x in range(x_max):
             for y in range(y_max):
-                if x != 0 and x != (burn_x+1):
-                    self.connectPorts(cells[x][y].outputs, cells[x-1][y].inputs)
-                if y != y_max-1 and y != (burn_y-1):
-                    self.connectPorts(cells[x][y].outputs, cells[x][y+1].inputs)
-                if x != x_max-1 and x != (burn_x-1):
-                    self.connectPorts(cells[x][y].outputs, cells[x+1][y].inputs)
-                if y != 0 and y != (burn_y+1):
-                    self.connectPorts(cells[x][y].outputs, cells[x][y-1].inputs)
+                if not(x == x_max-1):
+                    self.connectPorts(cells[x][y].outputs[0], cells[x+1][y].inputs[4])          # N -> S
+                if not(y == y_max-1):
+                    self.connectPorts(cells[x][y].outputs[2], cells[x][y+1].inputs[6])          # E -> W
+                    if not(x == 0):
+                        self.connectPorts(cells[x][y].outputs[3], cells[x-1][y+1].inputs[7])    # SE -> NW
+                    if not(x == x_max-1):
+                        self.connectPorts(cells[x][y].outputs[1], cells[x+1][y+1].inputs[5])    # NE -> SW
+                if not(x == 0):
+                    self.connectPorts(cells[x][y].outputs[4], cells[x-1][y].inputs[0])          # S -> N
+                if not(y == 0):
+                    self.connectPorts(cells[x][y].outputs[6], cells[x][y-1].inputs[2])          # W -> E
+                    if not(x == 0):
+                        self.connectPorts(cells[x][y].outputs[5], cells[x-1][y-1].inputs[1])    # SW -> NE
+                    if not(x == x_max-1):
+                        self.connectPorts(cells[x][y].outputs[7], cells[x+1][y-1].inputs[3])    # NW -> SE

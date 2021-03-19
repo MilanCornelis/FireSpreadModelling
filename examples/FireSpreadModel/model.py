@@ -29,8 +29,10 @@ class Cell(AtomicDEVS):
         self.y = y
 
         # Create in- and output ports
-        self.inputs = self.addInPort("inT")
-        self.outputs = self.addOutPort("outT")
+        self.inputs = [self.addInPort("inN"), self.addInPort("inNE"), self.addInPort("inE"), self.addInPort("inSE"),
+                       self.addInPort("inS"), self.addInPort("inSW"), self.addInPort("inW"), self.addInPort("inNW")]
+        self.outputs = [self.addOutPort("outN"), self.addOutPort("outNE"), self.addOutPort("outE"), self.addOutPort("outSE"),
+                        self.addOutPort("outS"), self.addOutPort("outSW"), self.addOutPort("outW"), self.addOutPort("outNW")]
 
     def intTransition(self):
         if self.state.phase == "initial":
@@ -75,8 +77,11 @@ class BurningCell(AtomicDEVS):
         self.x = x
         self.y = y
 
-        # Create in- and output ports
-        self.outputs = self.addOutPort("outT")
+        # Create in- and output ports (inputs are not used, just for easier cell space creation)
+        self.inputs = [self.addInPort("inN"), self.addInPort("inNE"), self.addInPort("inE"), self.addInPort("inSE"),
+                       self.addInPort("inS"), self.addInPort("inSW"), self.addInPort("inW"), self.addInPort("inNW")]
+        self.outputs = [self.addOutPort("outN"), self.addOutPort("outNE"), self.addOutPort("outE"), self.addOutPort("outSE"),
+                        self.addOutPort("outS"), self.addOutPort("outSW"), self.addOutPort("outW"), self.addOutPort("outNW")]
 
     def intTransition(self):
         if self.state.phase == "initial":
