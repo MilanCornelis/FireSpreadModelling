@@ -1,6 +1,4 @@
 [myvars]
-x: 11
-y: 11
 burn_x: 8
 burn_y: 5
 temperature: 100
