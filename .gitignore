@@ -9,4 +9,3 @@
 *.pyc
 *build*
 test/output/*
-examples/TestCellDEVS/simout/
