@@ -15,6 +15,6 @@ wind_dir = int(config.get("myvars", "wind_dir"))
 
 sim = Simulator(CellSpace(x, y, burn_x, burn_y, temperature))
 sim.setTerminationTime(250)
-sim.setCell(x, y, cell_file="./simout/celltrace-%05d", multifile=True)
+sim.setCell(x, y, cell_file="./simout/celltrace", multifile=False)
 sim.simulate()
 print("Simulation finished")

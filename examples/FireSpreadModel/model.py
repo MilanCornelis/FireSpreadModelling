@@ -1,3 +1,4 @@
+import math
 from pypdevs.DEVS import AtomicDEVS
 from pypdevs.infinity import INFINITY
 
@@ -19,6 +20,22 @@ def convert(s):
     for x in s:
         new += x
     return new
+
+
+def computeFirelineIntensity(fuel, wind_spd, wind_dir):
+    return None
+
+def rothermelModel(fuel, topography, wind_spd, wind_dir):
+    return None
+
+def decompose(RoS, wind_spd, wind_dir):
+    theta = [0, math.pi/4, math.pi/2, 3*math.pi/4, math.pi, -3*math.pi/4, -math.pi/2, -math.pi/4]
+    return None
+
+def computeFireSpread():
+    # Calculate the burn delays
+    # Do some fancy weird algorithm and tadaa, there is firespread :)
+    return None
 
 
 class CellState(object):
@@ -60,12 +77,16 @@ class Cell(AtomicDEVS):
     def extTransition(self, inputs):
         for i in range(self.inputs.__len__()):
             if self.inputs[i] in inputs:
+                """fli = computeFirelineIntensity(0, 0, 0)
+                if (fli > self.fli_threshold) and self.state.phase != BURNED:
+                    Set the cell to burning"""
                 if inputs[self.inputs[i]][0] == T_BURNING and self.state.phase != BURNED:
                     self.state.temperature = inputs[self.inputs[i]][0]
                     self.state.phase = BURNING
         return self.state
 
     def outputFnc(self):
+        """ Send message to neighbor when a fire has reached them """
         if self.state.phase == BURNING:
             return {self.outputs[0]: [T_BURNING], self.outputs[1]: [T_BURNING], self.outputs[2]: [T_BURNING],
                     self.outputs[3]: [T_BURNING], self.outputs[4]: [T_BURNING], self.outputs[5]: [T_BURNING],
