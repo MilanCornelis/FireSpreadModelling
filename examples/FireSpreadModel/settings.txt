@@ -2,5 +2,5 @@
 burn_x: 10
 burn_y: 10
 temperature: 100
-wind_speed: 50
+wind_speed: 10
 wind_dir: 0

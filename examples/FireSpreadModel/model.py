@@ -13,6 +13,7 @@ BURNED = "burned"
 TIME_STEP = 0.01
 T_BURNING = 999
 T_BURNED = 333
+FLN_THRESHOLD = 45
 
 
 def convert(s):
@@ -21,21 +22,41 @@ def convert(s):
         new += x
     return new
 
-
-def computeFirelineIntensity(fuel, wind_spd, wind_dir):
+def computeFirelineIntensity():
     return None
 
-def rothermelModel(fuel, topography, wind_spd, wind_dir):
-    return None
+def rothermelModel():
+    return 5
 
-def decompose(RoS, wind_spd, wind_dir):
-    theta = [0, math.pi/4, math.pi/2, 3*math.pi/4, math.pi, -3*math.pi/4, -math.pi/2, -math.pi/4]
-    return None
+def decomposeRateOfSpread(RoS, ltb_ratio):
+    # TODO: this decomposition requires a wind direction facing North,
+    #  we need to add the wind direction to the equations
+
+    pi = math.pi
+    #       N    NE    E      SE    S     SW       W       NW
+    theta = [0, pi/4, pi/2, 3*pi/4, pi, 5*pi/4, 3*pi/2, 7*pi/4]
+    RoS_i = []
+
+    # Find the parameters of the ellipse
+    a = RoS/(math.sqrt(ltb_ratio**2 - 1) + ltb_ratio)
+    b = ltb_ratio * a
+    c = RoS - b
+
+    # Find the x,y- components of the RoS in a certain direction on the ellipse
+    for i in range(len(theta)):
+        x = a*math.sin(theta[i])
+        y = b*math.cos(theta[i]) + c
+        RoS[i] = math.sqrt(x**2 + y**2)
+
+    return RoS_i
 
 def computeFireSpread():
-    # Calculate the burn delays
-    # Do some fancy weird algorithm and tadaa, there is firespread :)
+    # Calculate the burn delays t_i = d_i/RoS_i
+    # Do some fancy weird scheduling algorithm and tadaa, there is firespread :)
     return None
+
+def getLengthToBreadthRatio():
+    return 2
 
 
 class CellState(object):
@@ -60,10 +81,11 @@ class Cell(AtomicDEVS):
         # Create in- and output ports
         self.inputs = [self.addInPort("inN"), self.addInPort("inNE"), self.addInPort("inE"), self.addInPort("inSE"),
                        self.addInPort("inS"), self.addInPort("inSW"), self.addInPort("inW"), self.addInPort("inNW")]
-        self.outputs = [self.addOutPort("outN"), self.addOutPort("outNE"), self.addOutPort("outE"), self.addOutPort("outSE"),
-                        self.addOutPort("outS"), self.addOutPort("outSW"), self.addOutPort("outW"), self.addOutPort("outNW")]
+        self.outputs = [self.addOutPort("outN"), self.addOutPort("outNE"), self.addOutPort("outE"),
+                        self.addOutPort("outSE"), self.addOutPort("outS"), self.addOutPort("outSW"),
+                        self.addOutPort("outW"), self.addOutPort("outNW")]
 
-        self.taMap = {INACTIVE: 0, INITIAL: 0, UNBURNED: 1.0, BURNING: 5.0, BURNED: INFINITY}
+        self.taMap = {INACTIVE: INFINITY, INITIAL: 0, UNBURNED: 1.0, BURNING: 5.0, BURNED: INFINITY}
 
     def intTransition(self):
         self.state.elapsed += self.timeAdvance()
@@ -75,10 +97,11 @@ class Cell(AtomicDEVS):
         return self.state
 
     def extTransition(self, inputs):
+        # Only receive inputs if the cell is not burning yet
         for i in range(self.inputs.__len__()):
             if self.inputs[i] in inputs:
                 """fli = computeFirelineIntensity(0, 0, 0)
-                if (fli > self.fli_threshold) and self.state.phase != BURNED:
+                if fli > getLengthToBreadthRatio() and self.state.phase != BURNED:
                     Set the cell to burning"""
                 if inputs[self.inputs[i]][0] == T_BURNING and self.state.phase != BURNED:
                     self.state.temperature = inputs[self.inputs[i]][0]
@@ -109,8 +132,9 @@ class BurningCell(AtomicDEVS):
         # Create in- and output ports (inputs are not used, just for easier cell space creation)
         self.inputs = [self.addInPort("inN"), self.addInPort("inNE"), self.addInPort("inE"), self.addInPort("inSE"),
                        self.addInPort("inS"), self.addInPort("inSW"), self.addInPort("inW"), self.addInPort("inNW")]
-        self.outputs = [self.addOutPort("outN"), self.addOutPort("outNE"), self.addOutPort("outE"), self.addOutPort("outSE"),
-                        self.addOutPort("outS"), self.addOutPort("outSW"), self.addOutPort("outW"), self.addOutPort("outNW")]
+        self.outputs = [self.addOutPort("outN"), self.addOutPort("outNE"), self.addOutPort("outE"),
+                        self.addOutPort("outSE"), self.addOutPort("outS"), self.addOutPort("outSW"),
+                        self.addOutPort("outW"), self.addOutPort("outNW")]
 
         self.taMap = {INACTIVE: 0, INITIAL: 0, UNBURNED: 1.0, BURNING: 10.0, BURNED: INFINITY}
 
