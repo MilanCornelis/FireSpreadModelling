@@ -1,6 +1,7 @@
 import math
 from pypdevs.DEVS import AtomicDEVS
 from pypdevs.infinity import INFINITY
+from operator import itemgetter
 
 """ STATES """
 INACTIVE = "inactive"
@@ -8,30 +9,24 @@ INITIAL = "initial"
 UNBURNED = "unburned"
 BURNING = "burning"
 BURNED = "burned"
+TO_BURNING = "to_burning"
 
 """ VALUES """
-TIME_STEP = 0.01
 T_BURNING = 999
 T_BURNED = 333
-FLN_THRESHOLD = 45
+FLN_THRESHOLD = 45.0
+CELL_SIZE = 5
 
-
-def convert(s):
-    new = ""
-    for x in s:
-        new += x
-    return new
 
 def computeFirelineIntensity():
-    return None
+    return 50.0
+
 
 def rothermelModel():
-    return 5
+    return 3.0
+
 
 def decomposeRateOfSpread(RoS, ltb_ratio):
-    # TODO: this decomposition requires a wind direction facing North,
-    #  we need to add the wind direction to the equations
-
     pi = math.pi
     #       N    NE    E      SE    S     SW       W       NW
     theta = [0, pi/4, pi/2, 3*pi/4, pi, 5*pi/4, 3*pi/2, 7*pi/4]
@@ -46,17 +41,52 @@ def decomposeRateOfSpread(RoS, ltb_ratio):
     for i in range(len(theta)):
         x = a*math.sin(theta[i])
         y = b*math.cos(theta[i]) + c
-        RoS[i] = math.sqrt(x**2 + y**2)
+        RoS_i[i] = math.sqrt(x**2 + y**2)
 
     return RoS_i
 
-def computeFireSpread():
-    # Calculate the burn delays t_i = d_i/RoS_i
-    # Do some fancy weird scheduling algorithm and tadaa, there is firespread :)
-    return None
+
+def calculateBurnDelays(cell_size, RoS_i):
+    t_i = []
+    long_side = math.sqrt(2*(cell_size**2))
+    dir_i = ["N",        "NE",      "E",      "SE",       "S",      "SW",       "W",      "NW"]
+    d_i = [cell_size, long_side, cell_size, long_side, cell_size, long_side, cell_size, long_side]
+
+    # Calculate the burn delay in each direction
+    for i in range(len(d_i)):
+        t_i[i] = (d_i[i]/RoS_i[i], dir_i[i])
+
+    # Sort in non decreasing order
+    t_i = sorted(t_i, key=itemgetter(0), reverse=False)
+
+    # Subtract the minimum delay from all others
+    for i in range(1, len(t_i)):
+        t_i[i][0] -= t_i[0]
+
+    return t_i
+
 
 def getLengthToBreadthRatio():
     return 2
+
+
+def computeFireSpread():
+    RoS = rothermelModel()                      # Calculate the main rate of spread
+    ltb = getLengthToBreadthRatio()             # Get the dimensions of the ellipse
+    RoS_i = decomposeRateOfSpread(RoS, ltb)     # 1D -> 2D
+
+    # Calculate and return the burn delays in the main directions
+    return calculateBurnDelays(CELL_SIZE, RoS_i)
+
+def updateOrderContainer(order):
+    # Remove the first element
+    del order[0]
+
+    # Subtract the minimum delay from all others
+    for i in range(1, len(order)):
+        order[i][0] -= order[0]
+
+    return order
 
 
 class CellState(object):
@@ -71,8 +101,9 @@ class CellState(object):
 
 class Cell(AtomicDEVS):
     def __init__(self, x, y, temperature):
-        AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x,y))
+        AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x, y))
         self.state = CellState(temperature)
+        self.order = []
 
         # Position of the cell
         self.x = x
@@ -85,39 +116,52 @@ class Cell(AtomicDEVS):
                         self.addOutPort("outSE"), self.addOutPort("outS"), self.addOutPort("outSW"),
                         self.addOutPort("outW"), self.addOutPort("outNW")]
 
-        self.taMap = {INACTIVE: INFINITY, INITIAL: 0, UNBURNED: 1.0, BURNING: 5.0, BURNED: INFINITY}
+        self.taMap = {INACTIVE: INFINITY, INITIAL: 0.0, UNBURNED: 1.0, TO_BURNING: 0.0, BURNED: INFINITY}
 
     def intTransition(self):
-        self.state.elapsed += self.timeAdvance()
         if self.state.phase == INITIAL:
             self.state.phase = UNBURNED
-        elif self.state.phase == BURNING:
+        elif self.state.phase == TO_BURNING:
+            self.order = computeFireSpread()
+            i = self.order[0][1]
+            t_i = self.order[0][1]
+            # Update the order container
+            self.order = updateOrderContainer(self.order)
+            self.state.phase = BURNING
+        elif self.state.phase == BURNING and len(self.order) > 0:
+            i = self.order[0][1]
+            t_i = self.order[0][1]
+            # Update the order container
+            self.order = updateOrderContainer(self.order)
+            self.state.phase = BURNING
+        elif self.state.phase == BURNING and len(self.order) == 0:
             self.state.phase = BURNED
-            self.state.temperature = T_BURNED
         return self.state
 
     def extTransition(self, inputs):
-        # Only receive inputs if the cell is not burning yet
+        # Skip this function if the cell is already burning
+        if self.state.phase == BURNING:
+            return self.state
+
         for i in range(self.inputs.__len__()):
             if self.inputs[i] in inputs:
-                """fli = computeFirelineIntensity(0, 0, 0)
-                if fli > getLengthToBreadthRatio() and self.state.phase != BURNED:
-                    Set the cell to burning"""
-                if inputs[self.inputs[i]][0] == T_BURNING and self.state.phase != BURNED:
-                    self.state.temperature = inputs[self.inputs[i]][0]
-                    self.state.phase = BURNING
+                print("Das ne mooie input jonge!")
+                if (computeFirelineIntensity() > FLN_THRESHOLD) and (self.state.phase == UNBURNED):
+                    self.state.phase = TO_BURNING
+                    print("Zone grote vuurbal jonge!")
+                    return self.state
         return self.state
 
     def outputFnc(self):
-        """ Send message to neighbor when a fire has reached them """
         if self.state.phase == BURNING:
-            return {self.outputs[0]: [T_BURNING], self.outputs[1]: [T_BURNING], self.outputs[2]: [T_BURNING],
-                    self.outputs[3]: [T_BURNING], self.outputs[4]: [T_BURNING], self.outputs[5]: [T_BURNING],
-                    self.outputs[6]: [T_BURNING], self.outputs[7]: [T_BURNING]}
+            return {self.outputs[0]: [T_BURNING]}
         return {}
 
     def timeAdvance(self):
-        return self.taMap[self.state.phase]
+        if self.state.phase == BURNING:
+            return self.order[0][0]
+        else:
+            return self.taMap[self.state.phase]
 
 
 class BurningCell(AtomicDEVS):

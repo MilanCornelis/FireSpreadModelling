@@ -2,8 +2,8 @@ from pypdevs.simulator import Simulator
 from coupledModel import CellSpace
 import ConfigParser
 
-x = 51
-y = 51
+x = 11
+y = 11
 
 config = ConfigParser.ConfigParser()
 config.read("settings.txt")
