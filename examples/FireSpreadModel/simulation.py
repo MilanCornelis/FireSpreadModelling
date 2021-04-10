@@ -2,8 +2,8 @@ from pypdevs.simulator import Simulator
 from coupledModel import CellSpace
 import ConfigParser
 
-x = 11
-y = 11
+x = 25
+y = 25
 
 config = ConfigParser.ConfigParser()
 config.read("settings.txt")
@@ -15,6 +15,6 @@ wind_dir = int(config.get("myvars", "wind_dir"))
 
 sim = Simulator(CellSpace(x, y, burn_x, burn_y, temperature))
 sim.setTerminationTime(250)
-sim.setCell(x, y, cell_file="./simout/celltrace", multifile=False)
+sim.setCell(x, y, cell_file="./simout/celltrace-%05d", multifile=True)
 sim.simulate()
 print("Simulation finished")
