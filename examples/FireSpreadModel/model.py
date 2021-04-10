@@ -23,13 +23,17 @@ def computeFirelineIntensity():
 
 
 def rothermelModel():
-    return 3.0
+    return 5.0
 
 
-def decomposeRateOfSpread(RoS, ltb_ratio):
+def decomposeRateOfSpread(RoS, ltb_ratio, wind_dir):
     pi = math.pi
     #       N    NE    E      SE    S     SW       W       NW
     theta = [0, pi/4, pi/2, 3*pi/4, pi, 5*pi/4, 3*pi/2, 7*pi/4]
+
+    for i in range(len(theta)):
+        theta[i] += math.radians(wind_dir)
+
     RoS_i = [0, 0, 0, 0, 0, 0, 0, 0]
 
     # Find the parameters of the ellipse
@@ -67,13 +71,13 @@ def calculateBurnDelays(cell_size, RoS_i):
 
 
 def getLengthToBreadthRatio():
-    return 2
+    return 2.0
 
 
-def computeFireSpread():
-    RoS = rothermelModel()                      # Calculate the main rate of spread
-    ltb = getLengthToBreadthRatio()             # Get the dimensions of the ellipse
-    RoS_i = decomposeRateOfSpread(RoS, ltb)     # 1D -> 2D
+def computeFireSpread(wind_dir):
+    RoS = rothermelModel()                                  # Calculate the main rate of spread
+    ltb = getLengthToBreadthRatio()                         # Get the dimensions of the ellipse
+    RoS_i = decomposeRateOfSpread(RoS, ltb, wind_dir)       # 1D -> 2D
 
     # Calculate and return the burn delays in the main directions
     return calculateBurnDelays(CELL_SIZE, RoS_i)
@@ -101,10 +105,11 @@ class CellState(object):
 
 
 class Cell(AtomicDEVS):
-    def __init__(self, x, y, temperature):
+    def __init__(self, x, y, temperature, wind_dir):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x, y))
         self.state = CellState(temperature)
         self.order = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.wind_dir = wind_dir
 
         # Position of the cell
         self.x = x
@@ -126,7 +131,7 @@ class Cell(AtomicDEVS):
         if self.state.phase == INITIAL:
             self.state.phase = UNBURNED
         elif self.state.phase == TO_BURNING:
-            self.order = computeFireSpread()
+            self.order = computeFireSpread(self.wind_dir)
             self.dir = self.order[0][1]
             self.t_i = self.order[0][0]
             # Update the order container
@@ -170,10 +175,11 @@ class Cell(AtomicDEVS):
 
 
 class BurningCell(AtomicDEVS):
-    def __init__(self, x, y):
+    def __init__(self, x, y, wind_dir):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x, y))
         self.state = CellState(125)
         self.order = [0, 0, 0, 0, 0, 0, 0, 0]
+        self.wind_dir = wind_dir
 
         # Position of the cell
         self.x = x
@@ -195,7 +201,7 @@ class BurningCell(AtomicDEVS):
         if self.state.phase == INITIAL:
             self.state.phase = UNBURNED
         elif self.state.phase == UNBURNED:
-            self.order = computeFireSpread()
+            self.order = computeFireSpread(self.wind_dir)
             self.dir = self.order[0][1]
             self.t_i = self.order[0][0]
             # Update the order container
