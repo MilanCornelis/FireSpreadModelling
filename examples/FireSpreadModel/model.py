@@ -22,9 +22,55 @@ def computeFirelineIntensity():
     return 50.0
 
 
-def rothermelModel():
-    # TODO: make this the real Rothermel model formula
-    return 5.0
+def rothermelModel(w_o, delta, sigma, h, rho_p, M_f, S_T, S_e, U, slope, M_x):
+    # Oven dry bulk density
+    rho_b = w_o / delta
+
+    # Packing ratio
+    beta = rho_b/rho_p
+
+    # Mineral damping coefficient
+    rho_s = 0.174 * S_e ** -0.19
+
+    # Moisture damping coefficient
+    rho_M = 1 - 2.59 * (M_f / M_x) + 5.11 * (M_f / M_x) ** 2 - 3.52 * (M_f / M_x) ** 3
+    A = 1 / (4.774 * (sigma ** 0.1) - 7.27)
+
+    # Optimum packing ratio
+    beta_op = 3.348 * (sigma ** -0.8189)
+
+    # Maximum reaction velocity
+    gamma_max = (sigma ** 1.5) * (495 + 0.0594 * (sigma ** 1.5)) ** -1
+
+    # Optimum reaction velocity
+    gamma = gamma_max * ((beta / beta_op) ** A) * math.exp(A * (1 - beta) / beta_op)
+
+    # Net fuel loading
+    W_n = w_o / (1 + S_T)
+
+    # Reaction intensity
+    I_r = gamma * W_n * h * rho_M * rho_s
+
+    # Propagation flux ratio
+    xi = (192 + 0.2595*sigma)**-1 * math.exp((0.792+0.681*sigma**0.5)*(beta+0.1))
+
+    # Wind coefficient
+    C = 7.47*math.exp(-0.133*sigma**0.55)
+    B = 0.02526*sigma**0.54
+    E = 0.715*math.exp(-3.59*10**-4*sigma)
+    theta_w = C*U**B * (beta/beta_op)**-E
+
+    # Slope factor
+    theta_s = 5.275*beta**-0.3*math.tan(math.radians(slope))**2
+
+    # Epsilon
+    epsilon = math.exp(-138/sigma)
+
+    # Heat of pre-ignition
+    Q_ig = 250+1.116*M_f
+
+    # The Rothermel model formula
+    return (I_r*xi*(1+theta_w+theta_s))/(rho_b*epsilon*Q_ig)
 
 
 def decomposeRateOfSpread(RoS, ltb_ratio, wind_dir):
@@ -77,9 +123,12 @@ def getLengthToBreadthRatio(wind_speed):
 
 
 def computeFireSpread(wind_dir, wind_speed):
-    RoS = rothermelModel()                                  # Calculate the main rate of spread
-    ltb = getLengthToBreadthRatio(wind_speed)               # Get the dimensions of the ellipse
-    RoS_i = decomposeRateOfSpread(RoS, ltb, wind_dir)       # 1D -> 2D
+    # TODO: the Rothermel model parameters are fixed (homogenous vegitation and terrain)
+    #  this has to be made variable eventually
+
+    RoS = rothermelModel()   # Calculate the main rate of spread
+    ltb = getLengthToBreadthRatio(wind_speed)                           # Get the dimensions of the ellipse
+    RoS_i = decomposeRateOfSpread(RoS, ltb, wind_dir)                   # 1D -> 2D
 
     # Calculate and return the burn delays in the main directions
     return calculateBurnDelays(CELL_SIZE, RoS_i)
