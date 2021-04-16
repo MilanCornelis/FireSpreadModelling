@@ -22,6 +22,22 @@ def computeFirelineIntensity():
     return 50.0
 
 
+"""
+    Info of input parameters:
+        - w_o: oven dry fuel loading                            [lb/ft^2]
+        - delta: fuel depth                                     [ft]
+        - sigma: fuel particle surface-area-to-volume ratio     [1/ft]
+        - h: fuel particle low heat content                     [B.t.u./lb]
+        - rho_p: oven dry particle density                      [lb/ft^3]
+        - M_f: fuel particle moisture content                   [lb moisture / lb oven dry wood]
+        - S_T: fuel particle total mineral content              [lb minerals / lb oven dry wood]
+        - S_e: fuel particle effective mineral content          [lb silica-free minerals / lb oven dry wood]
+        - U: wind velocity at midflame height                   [m/s]
+        - slope: terrain slope                                  [degrees]
+        - M_x: moisture content of extinction
+            -> This term needs experimental determination. Currently using 0.3 which is the fiber saturation
+            point of many dead fuels. For aerial fuels (beta < 0.02) with low wind velocity (< 2.23 m/s) M_x ~= 0.15
+"""
 def rothermelModel(w_o, delta, sigma, h, rho_p, M_f, S_T, S_e, U, slope, M_x):
     # Oven dry bulk density
     rho_b = w_o / delta
@@ -54,10 +70,15 @@ def rothermelModel(w_o, delta, sigma, h, rho_p, M_f, S_T, S_e, U, slope, M_x):
     # Propagation flux ratio
     xi = (192 + 0.2595*sigma)**-1 * math.exp((0.792+0.681*sigma**0.5)*(beta+0.1))
 
-    # Wind coefficient
+
     C = 7.47*math.exp(-0.133*sigma**0.55)
     B = 0.02526*sigma**0.54
     E = 0.715*math.exp(-3.59*10**-4*sigma)
+
+    # Convert wind speed from m/s to ft/min
+    U *= 196.85039
+
+    # Wind coefficient
     theta_w = C*U**B * (beta/beta_op)**-E
 
     # Slope factor
