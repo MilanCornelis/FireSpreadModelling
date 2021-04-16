@@ -46,10 +46,10 @@ def rothermelModel(w_o, delta, sigma, h, rho_p, M_f, S_T, S_e, U, slope, M_x):
     beta = rho_b/rho_p
 
     # Mineral damping coefficient
-    rho_s = 0.174 * S_e ** -0.19
+    eta_s = 0.174 * S_e ** -0.19
 
     # Moisture damping coefficient
-    rho_M = 1 - 2.59 * (M_f / M_x) + 5.11 * (M_f / M_x) ** 2 - 3.52 * (M_f / M_x) ** 3
+    eta_M = 1 - 2.59 * (M_f / M_x) + 5.11 * (M_f / M_x) ** 2 - 3.52 * (M_f / M_x) ** 3
     A = 1 / (4.774 * (sigma ** 0.1) - 7.27)
 
     # Optimum packing ratio
@@ -59,18 +59,18 @@ def rothermelModel(w_o, delta, sigma, h, rho_p, M_f, S_T, S_e, U, slope, M_x):
     gamma_max = (sigma ** 1.5) * (495 + 0.0594 * (sigma ** 1.5)) ** -1
 
     # Optimum reaction velocity
-    gamma = gamma_max * ((beta / beta_op) ** A) * math.exp(A * (1 - beta) / beta_op)
+    gamma = gamma_max * ((beta / beta_op) ** A) * math.exp(A * (1 - beta/beta_op))
 
     # Net fuel loading
-    W_n = w_o / (1 + S_T)
+    w_n = w_o / (1 + S_T)
 
     # Reaction intensity
-    I_r = gamma * W_n * h * rho_M * rho_s
+    I_r = gamma * w_n * h * eta_M * eta_s
 
     # Propagation flux ratio
     xi = (192 + 0.2595*sigma)**-1 * math.exp((0.792+0.681*sigma**0.5)*(beta+0.1))
 
-
+    # Parameters for wind coefficient calculation
     C = 7.47*math.exp(-0.133*sigma**0.55)
     B = 0.02526*sigma**0.54
     E = 0.715*math.exp(-3.59*10**-4*sigma)
@@ -90,8 +90,8 @@ def rothermelModel(w_o, delta, sigma, h, rho_p, M_f, S_T, S_e, U, slope, M_x):
     # Heat of pre-ignition
     Q_ig = 250+1.116*M_f
 
-    # The Rothermel model formula
-    return (I_r*xi*(1+theta_w+theta_s))/(rho_b*epsilon*Q_ig)
+    # The Rothermel model formula and convert from ft/min to m/s
+    return 0.00508 * (I_r*xi*(1+theta_w+theta_s))/(rho_b*epsilon*Q_ig)
 
 
 def decomposeRateOfSpread(RoS, ltb_ratio, wind_dir):
@@ -143,13 +143,22 @@ def getLengthToBreadthRatio(wind_speed):
     return 2.0
 
 
-def computeFireSpread(wind_dir, wind_speed):
-    # TODO: the Rothermel model parameters are fixed (homogenous vegitation and terrain)
-    #  this has to be made variable eventually
-
-    RoS = rothermelModel()   # Calculate the main rate of spread
-    ltb = getLengthToBreadthRatio(wind_speed)                           # Get the dimensions of the ellipse
-    RoS_i = decomposeRateOfSpread(RoS, ltb, wind_dir)                   # 1D -> 2D
+def computeFireSpread(wind_dir, wind_speed, slope):
+    """ !!!MAKE SURE THAT ALL VARIABLES ARE FLOAT!!! """
+    # The current fuel type is (living) chaparral
+    RoS = rothermelModel(w_o=0.230,                      # Calculate the main rate of spread
+                         delta=6.0,
+                         sigma=1500.0,
+                         h=8000.0,
+                         rho_p=32.0,
+                         M_f=0.25,
+                         S_T=0.0555,
+                         S_e=0.01,
+                         U=wind_speed,
+                         slope=slope,
+                         M_x=0.3)
+    ltb = getLengthToBreadthRatio(wind_speed)           # Get the dimensions of the ellipse
+    RoS_i = decomposeRateOfSpread(RoS, ltb, wind_dir)   # 1D -> 2D
 
     # Calculate and return the burn delays in the main directions
     return calculateBurnDelays(CELL_SIZE, RoS_i)
@@ -204,7 +213,7 @@ class Cell(AtomicDEVS):
         if self.state.phase == INITIAL:
             self.state.phase = UNBURNED
         elif self.state.phase == TO_BURNING:
-            self.order = computeFireSpread(self.wind_dir, self.wind_speed)
+            self.order = computeFireSpread(self.wind_dir, self.wind_speed, 0.0)
             self.dir = self.order[0][1]
             self.t_i = self.order[0][0]
             # Update the order container
@@ -275,7 +284,7 @@ class BurningCell(AtomicDEVS):
         if self.state.phase == INITIAL:
             self.state.phase = UNBURNED
         elif self.state.phase == UNBURNED:
-            self.order = computeFireSpread(self.wind_dir, self.wind_speed)
+            self.order = computeFireSpread(self.wind_dir, self.wind_speed, 0.0)
             self.dir = self.order[0][1]
             self.t_i = self.order[0][0]
             # Update the order container
