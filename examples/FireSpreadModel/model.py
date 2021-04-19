@@ -90,7 +90,7 @@ def rothermelModel(w_o, delta, sigma, h, rho_p, M_f, S_T, S_e, U, slope, M_x):
     # Heat of pre-ignition
     Q_ig = 250+1116*M_f
 
-    return (I_r*xi*(1+theta_w+theta_s))/(rho_b*epsilon*Q_ig)
+    return (I_r*xi*(1+theta_w+theta_s))/(rho_b*epsilon*Q_ig)    # [ft/min]
 
 
 def decomposeRateOfSpread(RoS, wind_speed, wind_dir):
@@ -115,7 +115,7 @@ def decomposeRateOfSpread(RoS, wind_speed, wind_dir):
         RoS_i[i] = RoS * (1-e)/(1-e*math.cos(theta[i]))
         RoS_i[i] *= 0.00508
 
-    return RoS_i
+    return RoS_i    # [m/s]
 
 
 def calculateBurnDelays(cell_size, RoS_i):
@@ -141,17 +141,19 @@ def calculateBurnDelays(cell_size, RoS_i):
 def computeFireSpread(wind_dir, wind_speed, slope):
     """ !!!MAKE SURE THAT ALL VARIABLES ARE FLOAT!!! """
     # The current fuel type is (living) chaparral
-    RoS = rothermelModel(w_o=0.230,                      # Calculate the main rate of spread
+    RoS = rothermelModel(w_o=0.528,                      # Calculate the main rate of spread
                          delta=6.0,
-                         sigma=2000.0,
-                         h=8000.0,
+                         sigma=1250.0,
+                         h=9500.0,
                          rho_p=32,
                          M_f=0.1,
                          S_T=0.0555,
                          S_e=0.01,
                          U=wind_speed,
                          slope=slope,
-                         M_x=0.2)
+                         M_x=0.15)
+
+    print(RoS * 0.00508)
 
     RoS_i = decomposeRateOfSpread(RoS, wind_speed, wind_dir)   # 1D -> 2D
 
