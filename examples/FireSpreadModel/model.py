@@ -153,8 +153,6 @@ def computeFireSpread(wind_dir, wind_speed, slope):
                          slope=slope,
                          M_x=0.15)
 
-    print(RoS * 0.00508)
-
     RoS_i = decomposeRateOfSpread(RoS, wind_speed, wind_dir)   # 1D -> 2D
 
     # Calculate and return the burn delays in the main directions
