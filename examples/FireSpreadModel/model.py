@@ -50,7 +50,7 @@ def rothermelModel(w_o, delta, sigma, h, rho_p, M_f, S_T, S_e, U, slope, M_x):
 
     # Moisture damping coefficient
     eta_M = 1 - 2.59 * (M_f / M_x) + 5.11 * (M_f / M_x) ** 2 - 3.52 * (M_f / M_x) ** 3
-    A = 1333*sigma**-0.7913     # 1 / (4.774 * (sigma ** 0.1) - 7.27)
+    A = 1333*sigma**-0.7913
 
     # Optimum packing ratio
     beta_op = 3.348 * (sigma ** -0.8189)
@@ -90,66 +90,10 @@ def rothermelModel(w_o, delta, sigma, h, rho_p, M_f, S_T, S_e, U, slope, M_x):
     # Heat of pre-ignition
     Q_ig = 250+1116*M_f
 
-    # The Rothermel model formula and convert from ft/min to m/s
-    return 0.00508 * (I_r*xi*(1+theta_w+theta_s))/(rho_b*epsilon*Q_ig)
-
-"""def rothermelModel(w_o, delta, sigma, h, rho_p, M_f, S_T, S_e, U, slope, M_x):
-    # Oven dry bulk density
-    rho_b = w_o / delta
-
-    # Packing ratio
-    beta = rho_b/rho_p
-
-    # Mineral damping coefficient
-    eta_s = max(0.174 * S_e ** -0.19, 1.0)
-
-    # Moisture damping coefficient
-    eta_M = 1 - 2.59 * (M_f / M_x) + 5.11 * (M_f / M_x) ** 2 - 3.52 * (M_f / M_x) ** 3
-    A = 1 / (4.774 * (sigma ** 0.1) - 7.27)
-
-    # Optimum packing ratio
-    beta_op = 3.348 * (sigma ** -0.8189)
-
-    # Maximum reaction velocity
-    gamma_max = (sigma ** 1.5) * (495 + 0.0594 * (sigma ** 1.5)) ** -1
-
-    # Optimum reaction velocity
-    gamma = gamma_max * ((beta / beta_op) ** A) * math.exp(A * (1 - beta/beta_op))
-
-    # Net fuel loading
-    w_n = w_o / (1 + S_T)
-
-    # Reaction intensity
-    I_r = gamma * w_n * h * eta_M * eta_s
-
-    # Propagation flux ratio
-    xi = (192 + 0.2595*sigma)**-1 * math.exp((0.792+0.681*sigma**0.5)*(beta+0.1))
-
-    # Parameters for wind coefficient calculation
-    C = 7.47*math.exp(-0.133*sigma**0.55)
-    B = 0.02526*sigma**0.54
-    E = 0.715*math.exp(-3.59*10**-4*sigma)
-
-    # Convert wind speed from m/s to ft/min
-    U *= 196.85039
-
-    # Wind coefficient
-    theta_w = C*U**B * (beta/beta_op)**-E
-
-    # Slope factor
-    theta_s = 5.275*beta**-0.3*math.tan(math.radians(slope))**2
-
-    # Epsilon
-    epsilon = math.exp(-138/sigma)
-
-    # Heat of pre-ignition
-    Q_ig = 250+1116*M_f
-
-    # The Rothermel model formula and convert from ft/min to m/s
-    return 0.00508 * (I_r*xi*(1+theta_w+theta_s))/(rho_b*epsilon*Q_ig)"""
+    return (I_r*xi*(1+theta_w+theta_s))/(rho_b*epsilon*Q_ig)
 
 
-def decomposeRateOfSpread(RoS, ltb_ratio, wind_dir):
+def decomposeRateOfSpread(RoS, wind_speed, wind_dir):
     pi = math.pi
     #       N    NE    E      SE    S     SW       W       NW
     theta = [0, pi/4, pi/2, 3*pi/4, pi, 5*pi/4, 3*pi/2, 7*pi/4]
@@ -159,16 +103,17 @@ def decomposeRateOfSpread(RoS, ltb_ratio, wind_dir):
 
     RoS_i = [0, 0, 0, 0, 0, 0, 0, 0]
 
-    # Find the parameters of the ellipse
-    a = RoS/(math.sqrt(ltb_ratio**2 - 1) + ltb_ratio)
-    b = ltb_ratio * a
-    c = RoS - b
+    # Convert wind speed to mph
+    wind_speed *= 0.6214
+    # Calculate the length to breadth ratio
+    ltb = 1 + 0.25 * wind_speed
+    # Calculate the eccentricity
+    e = math.sqrt(ltb**2 - 1)/ltb
 
-    # Find the x,y- components of the RoS in a certain direction on the ellipse
+    # Calculate the RoS in each direction and convert from ft/min to m/s
     for i in range(len(theta)):
-        x = a*math.sin(theta[i])
-        y = b*math.cos(theta[i]) + c
-        RoS_i[i] = math.sqrt(x**2 + y**2)
+        RoS_i[i] = RoS * (1-e)/(1-e*math.cos(theta[i]))
+        RoS_i[i] *= 0.00508
 
     return RoS_i
 
@@ -193,11 +138,6 @@ def calculateBurnDelays(cell_size, RoS_i):
     return t_i
 
 
-def getLengthToBreadthRatio(wind_speed):
-    # TODO: make this a table with ratio's based on the wind speed
-    return 2.0
-
-
 def computeFireSpread(wind_dir, wind_speed, slope):
     """ !!!MAKE SURE THAT ALL VARIABLES ARE FLOAT!!! """
     # The current fuel type is (living) chaparral
@@ -212,9 +152,8 @@ def computeFireSpread(wind_dir, wind_speed, slope):
                          U=wind_speed,
                          slope=slope,
                          M_x=0.2)
-    print(RoS)
-    ltb = getLengthToBreadthRatio(wind_speed)           # Get the dimensions of the ellipse
-    RoS_i = decomposeRateOfSpread(RoS, ltb, wind_dir)   # 1D -> 2D
+
+    RoS_i = decomposeRateOfSpread(RoS, wind_speed, wind_dir)   # 1D -> 2D
 
     # Calculate and return the burn delays in the main directions
     return calculateBurnDelays(CELL_SIZE, RoS_i)
