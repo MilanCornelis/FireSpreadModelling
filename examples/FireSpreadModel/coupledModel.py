@@ -13,7 +13,7 @@ class CellSpace(CoupledDEVS):
             row = []
             for y in range(y_max):
                 if x == burn_x and y == burn_y:
-                    row.append(self.addSubModel(BurningCell(x, y, wind_dir, wind_speed)))
+                    row.append(self.addSubModel(BurningCell(x, y, temperature, wind_dir, wind_speed)))
                 else:
                     row.append(self.addSubModel(Cell(x, y, temperature, wind_dir, wind_speed)))
             cells.append(row)
