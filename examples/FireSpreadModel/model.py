@@ -12,8 +12,8 @@ BURNED = "burned"
 TO_BURNING = "to_burning"
 
 """ VALUES """
-T_BURNING = 999
-T_BURNED = 333
+T_BURNING = 3
+T_BURNED = 2
 FLN_THRESHOLD = 45.0
 CELL_SIZE = 5
 
@@ -254,7 +254,7 @@ class Cell(AtomicDEVS):
 class BurningCell(AtomicDEVS):
     def __init__(self, x, y, wind_dir, wind_speed):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x, y))
-        self.state = CellState(125)
+        self.state = CellState(1)
         self.order = [0, 0, 0, 0, 0, 0, 0, 0]
         self.wind_dir = wind_dir
         self.wind_speed = wind_speed
@@ -297,7 +297,6 @@ class BurningCell(AtomicDEVS):
             self.state.phase = BURNED
         return self.state
 
-    # TODO: output function still has to be written
     def outputFnc(self):
         if self.state.phase == BURNING:
             return {self.outputs[self.dirs[self.dir]]: [T_BURNING]}

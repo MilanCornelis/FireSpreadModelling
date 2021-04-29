@@ -1,6 +1,6 @@
 [myvars]
 burn_x: 5
 burn_y: 26
-temperature: 100
+temperature: 1
 wind_speed: 5
 wind_dir: 45
