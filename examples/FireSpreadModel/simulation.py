@@ -5,6 +5,7 @@ import os
 
 
 def clear_simout():
+    print("Clearing folder")
     folder = "./simout/"
     for filename in os.listdir(folder):
         file_path = os.path.join(folder, filename)
@@ -28,6 +29,7 @@ wind_dir = int(config.get("myvars", "wind_dir"))
 # Clear the simout folder
 clear_simout()
 
+print("Simulation started")
 sim = Simulator(CellSpace(x, y, burn_x, burn_y, temperature, wind_dir, wind_speed))
 sim.setTerminationTime(500)
 #sim.setCell(x, y, cell_file="./simout/celltrace", multifile=False)
