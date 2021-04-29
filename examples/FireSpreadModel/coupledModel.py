@@ -1,5 +1,6 @@
 from pypdevs.DEVS import CoupledDEVS
 from model import Cell, BurningCell
+import math
 
 
 class CellSpace(CoupledDEVS):
@@ -15,12 +16,14 @@ class CellSpace(CoupledDEVS):
                 if x == burn_x and y == burn_y:
                     row.append(self.addSubModel(BurningCell(x, y, 125, 50.0, wind_dir, wind_speed)))
                 else:
-                    row.append(self.addSubModel(Cell(x, y, temperature, 50.0, wind_dir, wind_speed)))
-                    """# Introduce some non-burnable cells
-                    if (24 <= y <= 28) and (20 <= x <= 25):
+                    #row.append(self.addSubModel(Cell(x, y, temperature, 50.0, wind_dir, wind_speed)))
+                    # Introduce some non-burnable cells
+                    # Calculate the distance from the circle
+                    distance = math.sqrt((30-x)**2 + (30-y)**2)
+                    if distance <= 10:
                         row.append(self.addSubModel(Cell(x, y, 50, 0.0, wind_dir, wind_speed)))
                     else:
-                        row.append(self.addSubModel(Cell(x, y, temperature, 50.0, wind_dir, wind_speed)))"""
+                        row.append(self.addSubModel(Cell(x, y, temperature, 50.0, wind_dir, wind_speed)))
             cells.append(row)
         print("Creating cell space: END")
 
