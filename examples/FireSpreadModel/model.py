@@ -18,10 +18,6 @@ FLN_THRESHOLD = 45.0
 CELL_SIZE = 5
 
 
-def computeFirelineIntensity():
-    return 50.0
-
-
 """
     Info of input parameters:
         - w_o: oven dry fuel loading                            [lb/ft^2]
@@ -181,12 +177,13 @@ class CellState(object):
 
 
 class Cell(AtomicDEVS):
-    def __init__(self, x, y, temperature, wind_dir, wind_speed):
+    def __init__(self, x, y, temperature, fli, wind_dir, wind_speed):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x, y))
         self.state = CellState(temperature)
         self.order = [0, 0, 0, 0, 0, 0, 0, 0]
         self.wind_dir = wind_dir
         self.wind_speed = wind_speed
+        self.fli = fli
 
         # Position of the cell
         self.x = x
@@ -234,7 +231,7 @@ class Cell(AtomicDEVS):
 
         for i in range(self.inputs.__len__()):
             if self.inputs[i] in inputs:
-                if (computeFirelineIntensity() > FLN_THRESHOLD) and (self.state.phase == UNBURNED):
+                if (self.fli > FLN_THRESHOLD) and (self.state.phase == UNBURNED):
                     self.state.phase = TO_BURNING
                     return self.state
         return self.state
@@ -252,12 +249,13 @@ class Cell(AtomicDEVS):
 
 
 class BurningCell(AtomicDEVS):
-    def __init__(self, x, y, temperature, wind_dir, wind_speed):
+    def __init__(self, x, y, temperature, fli, wind_dir, wind_speed):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x, y))
         self.state = CellState(temperature)
         self.order = [0, 0, 0, 0, 0, 0, 0, 0]
         self.wind_dir = wind_dir
         self.wind_speed = wind_speed
+        self.fli = fli
 
         # Position of the cell
         self.x = x
