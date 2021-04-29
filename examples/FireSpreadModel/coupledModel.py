@@ -19,8 +19,8 @@ class CellSpace(CoupledDEVS):
                     #row.append(self.addSubModel(Cell(x, y, temperature, 50.0, wind_dir, wind_speed)))
                     # Introduce some non-burnable cells
                     # Calculate the distance from the circle
-                    distance = math.sqrt((30-x)**2 + (30-y)**2)
-                    if distance <= 10:
+                    distance = math.sqrt((15-x)**2 + (30-y)**2)
+                    if distance <= 5:
                         row.append(self.addSubModel(Cell(x, y, 50, 0.0, wind_dir, wind_speed)))
                     else:
                         row.append(self.addSubModel(Cell(x, y, temperature, 50.0, wind_dir, wind_speed)))
