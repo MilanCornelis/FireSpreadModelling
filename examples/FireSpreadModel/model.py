@@ -15,7 +15,7 @@ TO_BURNING = "to_burning"
 T_BURNING = 900
 T_BURNED = 300
 FLN_THRESHOLD = 45.0
-CELL_SIZE = 5
+CELL_SIZE = 1
 
 
 """
@@ -95,7 +95,7 @@ def decomposeRateOfSpread(RoS, wind_speed, wind_dir):
     theta = [0, pi/4, pi/2, 3*pi/4, pi, 5*pi/4, 3*pi/2, 7*pi/4]
 
     for i in range(len(theta)):
-        theta[i] -= math.radians(wind_dir)
+        theta[i] += math.radians(wind_dir)
 
     RoS_i = [0, 0, 0, 0, 0, 0, 0, 0]
 
