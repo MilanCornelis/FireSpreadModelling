@@ -9,12 +9,12 @@ fuel_types = {0: "chaparral",
               4: "pocosin",
               5: "water"}
 
-temps = {0: 1000,
-         1: 2000,
-         2: 3000,
-         3: 4000,
-         4: 5000,
-         5: 6000}
+temps = {0: 14,
+         1: 15,
+         2: 16,
+         3: 17,
+         4: 18,
+         5: 19}
 
 class CellSpace(CoupledDEVS):
     def __init__(self, x_max, y_max, burn_x, burn_y, temperature, wind_dir, wind_speed):

@@ -12,8 +12,8 @@ BURNED = "burned"
 TO_BURNING = "to_burning"
 
 """ VALUES """
-T_BURNING = 900
-T_BURNED = 300
+T_BURNING = 25
+T_BURNED = 10
 FLN_THRESHOLD = 45.0
 CELL_SIZE = 5
 

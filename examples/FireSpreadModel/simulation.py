@@ -37,7 +37,7 @@ def visualize():
                     data = np.array(data)
 
                     plt.cla()
-                    ax.imshow(data, vmin=100.0, vmax=6000.0)
+                    ax.imshow(data, vmin=-15.0, vmax=25.0)
                     ax.invert_yaxis()
                     fig.show()
                     plt.pause(0.01)
