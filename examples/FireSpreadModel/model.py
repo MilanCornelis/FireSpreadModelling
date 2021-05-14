@@ -13,9 +13,9 @@ TO_BURNING = "to_burning"
 
 """ VALUES """
 T_BURNING = 30
-T_BURNED = 10
+T_BURNED = -15
 FLN_THRESHOLD = 45.0
-CELL_SIZE = 5
+CELL_SIZE = 1
 
 """ FUEL TYPES """
 chaparral = {"w_o": 0.528, "delta": 6.0, "sigma": 1250.0, "h": 9500.0,
@@ -187,7 +187,7 @@ class CellState(object):
     def __init__(self, temp):
         self.temperature = temp
         self.phase = INITIAL
-        self.elapsed = 0.0
+        self.current_time = 0.0
 
     def toCellState(self):
         return self.temperature
