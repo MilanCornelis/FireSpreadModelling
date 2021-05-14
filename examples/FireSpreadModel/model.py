@@ -200,8 +200,12 @@ class Cell(AtomicDEVS):
         self.order = [0, 0, 0, 0, 0, 0, 0, 0]
         self.wind_dir = wind_dir
         self.wind_speed = wind_speed
-        self.fli = fli
         self.fuel_type = fuel_type
+
+        if fuel_type != "water":
+            self.fli = fli
+        else:
+            self.fli = 0.0
 
         # Position of the cell
         self.x = x

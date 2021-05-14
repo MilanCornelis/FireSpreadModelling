@@ -37,7 +37,7 @@ def visualize():
                     data = np.array(data)
 
                     plt.cla()
-                    ax.imshow(data, vmin=0.0, vmax=1000.0)
+                    ax.imshow(data, vmin=100.0, vmax=6000.0)
                     ax.invert_yaxis()
                     fig.show()
                     plt.pause(0.01)
@@ -76,7 +76,7 @@ def simulate():
 
     print("Simulation started")
     sim = Simulator(CellSpace(x, y, burn_x, burn_y, temperature, wind_dir, wind_speed))
-    sim.setTerminationTime(50)
+    sim.setTerminationTime(100)
     # sim.setCell(x, y, cell_file="./simout/celltrace", multifile=False)
     sim.setCell(x, y, cell_file="./examples/FireSpreadModel/simout/celltrace-%05d", multifile=True)
     sim.simulate()

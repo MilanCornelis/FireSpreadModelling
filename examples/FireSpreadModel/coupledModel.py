@@ -1,6 +1,20 @@
 from pypdevs.DEVS import CoupledDEVS
 from model import Cell, BurningCell
+from random import randrange
 
+fuel_types = {0: "chaparral",
+              1: "grass",
+              2: "sawgrass",
+              3: "sagebrush",
+              4: "pocosin",
+              5: "water"}
+
+temps = {0: 1000,
+         1: 2000,
+         2: 3000,
+         3: 4000,
+         4: 5000,
+         5: 6000}
 
 class CellSpace(CoupledDEVS):
     def __init__(self, x_max, y_max, burn_x, burn_y, temperature, wind_dir, wind_speed):
@@ -13,9 +27,10 @@ class CellSpace(CoupledDEVS):
             row = []
             for y in range(y_max):
                 if x == burn_x and y == burn_y:
-                    row.append(self.addSubModel(BurningCell(x, y, 125, 50.0, wind_dir, wind_speed, "pocosin")))
+                    row.append(self.addSubModel(BurningCell(x, y, 125, 50.0, wind_dir, wind_speed, fuel_types[0])))
                 else:
-                    row.append(self.addSubModel(Cell(x, y, temperature, 50.0, wind_dir, wind_speed, "pocosin")))
+                    ft = randrange(5)
+                    row.append(self.addSubModel(Cell(x, y, temps[ft], 50.0, wind_dir, wind_speed, fuel_types[ft])))
                     """# Introduce some non-burnable cells
                     # Calculate the distance from the circle
                     distance = math.sqrt((15-x)**2 + (30-y)**2)
