@@ -1,6 +1,5 @@
 from pypdevs.DEVS import CoupledDEVS
 from model import Cell, BurningCell
-import math
 
 
 class CellSpace(CoupledDEVS):
@@ -14,9 +13,9 @@ class CellSpace(CoupledDEVS):
             row = []
             for y in range(y_max):
                 if x == burn_x and y == burn_y:
-                    row.append(self.addSubModel(BurningCell(x, y, 125, 50.0, wind_dir, wind_speed)))
+                    row.append(self.addSubModel(BurningCell(x, y, 125, 50.0, wind_dir, wind_speed, "pocosin")))
                 else:
-                    row.append(self.addSubModel(Cell(x, y, temperature, 50.0, wind_dir, wind_speed)))
+                    row.append(self.addSubModel(Cell(x, y, temperature, 50.0, wind_dir, wind_speed, "pocosin")))
                     """# Introduce some non-burnable cells
                     # Calculate the distance from the circle
                     distance = math.sqrt((15-x)**2 + (30-y)**2)

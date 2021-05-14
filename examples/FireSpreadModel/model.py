@@ -15,8 +15,25 @@ TO_BURNING = "to_burning"
 T_BURNING = 900
 T_BURNED = 300
 FLN_THRESHOLD = 45.0
-CELL_SIZE = 1
+CELL_SIZE = 5
 
+""" FUEL TYPES """
+chaparral = {"w_o": 0.528, "delta": 6.0, "sigma": 1250.0, "h": 9500.0,
+             "rho_p": 32.0, "M_f": 0.1, "S_T": 0.0555, "S_e": 0.01, "M_x": 0.15}
+grass = {"w_o": 0.0253, "delta": 1.0, "sigma": 2000.0, "h": 8000.0,
+         "rho_p": 32.0, "M_f": 0.05, "S_T": 0.0555, "S_e": 0.01, "M_x": 0.15}
+sawgrass = {"w_o": 0.1012, "delta": 3.0, "sigma": 1500.0, "h": 8700.0,
+         "rho_p": 32.0, "M_f": 0.1, "S_T": 0.0555, "S_e": 0.01, "M_x": 0.40}
+sagebrush = {"w_o": 0.1265, "delta": 1.25, "sigma": 1500.0, "h": 8000.0,
+         "rho_p": 32.0, "M_f": 0.1, "S_T": 0.0555, "S_e": 0.01, "M_x": 0.15}
+pocosin = {"w_o": 0.3543, "delta": 4.0, "sigma": 1500.0, "h": 9000.0,
+         "rho_p": 32.0, "M_f": 0.1, "S_T": 0.0555, "S_e": 0.01, "M_x": 0.15}
+
+fuel = {"chaparral": chaparral,
+        "grass": grass,
+        "sawgrass": sawgrass,
+        "sagebrush": sagebrush,
+        "pocosin": pocosin}
 
 """
     Info of input parameters:
@@ -134,20 +151,20 @@ def calculateBurnDelays(cell_size, RoS_i):
     return t_i
 
 
-def computeFireSpread(wind_dir, wind_speed, slope):
+def computeFireSpread(wind_dir, wind_speed, slope, fuel_type):
     """ !!!MAKE SURE THAT ALL VARIABLES ARE FLOAT!!! """
     # The current fuel type is (living) chaparral
-    RoS = rothermelModel(w_o=0.528,                      # Calculate the main rate of spread
-                         delta=6.0,
-                         sigma=1250.0,
-                         h=9500.0,
-                         rho_p=32,
-                         M_f=0.1,
-                         S_T=0.0555,
-                         S_e=0.01,
+    RoS = rothermelModel(w_o=fuel[fuel_type]["w_o"],                      # Calculate the main rate of spread
+                         delta=fuel[fuel_type]["delta"],
+                         sigma=fuel[fuel_type]["sigma"],
+                         h=fuel[fuel_type]["h"],
+                         rho_p=fuel[fuel_type]["rho_p"],
+                         M_f=fuel[fuel_type]["M_f"],
+                         S_T=fuel[fuel_type]["S_T"],
+                         S_e=fuel[fuel_type]["S_e"],
                          U=wind_speed,
                          slope=slope,
-                         M_x=0.15)
+                         M_x=fuel[fuel_type]["M_x"])
 
     RoS_i = decomposeRateOfSpread(RoS, wind_speed, wind_dir)   # 1D -> 2D
 
@@ -177,13 +194,14 @@ class CellState(object):
 
 
 class Cell(AtomicDEVS):
-    def __init__(self, x, y, temperature, fli, wind_dir, wind_speed):
+    def __init__(self, x, y, temperature, fli, wind_dir, wind_speed, fuel_type):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x, y))
         self.state = CellState(temperature)
         self.order = [0, 0, 0, 0, 0, 0, 0, 0]
         self.wind_dir = wind_dir
         self.wind_speed = wind_speed
         self.fli = fli
+        self.fuel_type = fuel_type
 
         # Position of the cell
         self.x = x
@@ -205,7 +223,7 @@ class Cell(AtomicDEVS):
         if self.state.phase == INITIAL:
             self.state.phase = UNBURNED
         elif self.state.phase == TO_BURNING:
-            self.order = computeFireSpread(self.wind_dir, self.wind_speed, 0.0)
+            self.order = computeFireSpread(self.wind_dir, self.wind_speed, 0.0, self.fuel_type)
             self.dir = self.order[0][1]
             self.t_i = self.order[0][0]
             # Update the order container
@@ -249,13 +267,14 @@ class Cell(AtomicDEVS):
 
 
 class BurningCell(AtomicDEVS):
-    def __init__(self, x, y, temperature, fli, wind_dir, wind_speed):
+    def __init__(self, x, y, temperature, fli, wind_dir, wind_speed, fuel_type):
         AtomicDEVS.__init__(self, "Cell(%d,%d)" % (x, y))
         self.state = CellState(temperature)
         self.order = [0, 0, 0, 0, 0, 0, 0, 0]
         self.wind_dir = wind_dir
         self.wind_speed = wind_speed
         self.fli = fli
+        self.fuel_type = fuel_type
 
         # Position of the cell
         self.x = x
@@ -277,7 +296,7 @@ class BurningCell(AtomicDEVS):
         if self.state.phase == INITIAL:
             self.state.phase = UNBURNED
         elif self.state.phase == UNBURNED:
-            self.order = computeFireSpread(self.wind_dir, self.wind_speed, 0.0)
+            self.order = computeFireSpread(self.wind_dir, self.wind_speed, 0.0, self.fuel_type)
             self.dir = self.order[0][1]
             self.t_i = self.order[0][0]
             # Update the order container
