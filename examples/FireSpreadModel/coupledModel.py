@@ -1,36 +1,28 @@
 from pypdevs.DEVS import CoupledDEVS
 from model import Cell, BurningCell
-from random import randrange
+import TerrainGeneration
 
-fuel_types = {0: "chaparral",
-              1: "grass",
-              2: "sawgrass",
-              3: "sagebrush",
-              4: "pocosin",
+fuel_types = {14: "chaparral",
+              16: "grass",
+              18: "sawgrass",
+              20: "sagebrush",
+              22: "pocosin",
               5: "water"}
-
-temps = {0: 14,
-         1: 15,
-         2: 16,
-         3: 17,
-         4: 18,
-         5: 19}
 
 class CellSpace(CoupledDEVS):
     def __init__(self, x_max, y_max, burn_x, burn_y, temperature, wind_dir, wind_speed):
         CoupledDEVS.__init__(self, "FireSpread")
-
         # Create the cell space
+        terrain = TerrainGeneration.getTerrainData()
         print("Creating cell space: START")
         cells = []
         for x in range(x_max):
             row = []
             for y in range(y_max):
                 if x == burn_x and y == burn_y:
-                    row.append(self.addSubModel(BurningCell(x, y, 125, 50.0, wind_dir, wind_speed, fuel_types[0])))
+                    row.append(self.addSubModel(BurningCell(x, y, terrain[x][y], 50.0, wind_dir, wind_speed, fuel_types[terrain[x][y]])))
                 else:
-                    ft = randrange(5)
-                    row.append(self.addSubModel(Cell(x, y, temps[ft], 50.0, wind_dir, wind_speed, fuel_types[ft])))
+                    row.append(self.addSubModel(Cell(x, y, terrain[x][y], 50.0, wind_dir, wind_speed, fuel_types[terrain[x][y]])))
                     """# Introduce some non-burnable cells
                     # Calculate the distance from the circle
                     distance = math.sqrt((15-x)**2 + (30-y)**2)
