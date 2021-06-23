@@ -15,7 +15,7 @@ TO_BURNING = "to_burning"
 T_BURNING = 30
 T_BURNED = -15
 FLN_THRESHOLD = 45.0
-CELL_SIZE = 1
+CELL_SIZE = 5
 
 """ FUEL TYPES """
 chaparral = {"w_o": 0.528, "delta": 6.0, "sigma": 1250.0, "h": 9500.0,
@@ -291,7 +291,7 @@ class BurningCell(AtomicDEVS):
                         self.addOutPort("outSE"), self.addOutPort("outS"), self.addOutPort("outSW"),
                         self.addOutPort("outW"), self.addOutPort("outNW")]
 
-        self.taMap = {INACTIVE: INFINITY, INITIAL: 0, BURNING: 0.0, UNBURNED: 1.0, BURNED: INFINITY}
+        self.taMap = {INACTIVE: INFINITY, INITIAL: 0.0, BURNING: 0.0, UNBURNED: 1.0, BURNED: INFINITY}
         self.dirs = {"N": 0, "NE": 1, "E": 2, "SE": 3, "S": 4, "SW": 5, "W": 6, "NW": 7}
         self.dir = "N"
         self.t_i = 0.0

@@ -19,14 +19,14 @@ class CellSpace(CoupledDEVS):
         for x in range(x_max):
             row = []
             for y in range(y_max):
-                if x == burn_x and y == burn_y:
+                """if x == burn_x and y == burn_y:
                     row.append(self.addSubModel(BurningCell(x, y, terrain[x][y], 50.0, wind_dir, wind_speed, fuel_types[terrain[x][y]])))
                 else:
-                    row.append(self.addSubModel(Cell(x, y, terrain[x][y], 50.0, wind_dir, wind_speed, fuel_types[terrain[x][y]])))
-                """if x == burn_x and y == burn_y:
+                    row.append(self.addSubModel(Cell(x, y, terrain[x][y], 50.0, wind_dir, wind_speed, fuel_types[terrain[x][y]])))"""
+                if x == burn_x and y == burn_y:
                     row.append(self.addSubModel(BurningCell(x, y, 14, 50.0, wind_dir, wind_speed, fuel_types[14])))
                 else:
-                    row.append(self.addSubModel(Cell(x, y, 14, 50.0, wind_dir, wind_speed, fuel_types[14])))"""
+                    row.append(self.addSubModel(Cell(x, y, 14, 50.0, wind_dir, wind_speed, fuel_types[14])))
             cells.append(row)
         print("Creating cell space: END")
 

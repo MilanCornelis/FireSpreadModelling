@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 
 def visualize():
-    time.sleep(1)
+    time.sleep(2)
     folder = "./examples/FireSpreadModel/simout/"
     files = []
     new_file = True
@@ -76,7 +76,7 @@ def simulate():
 
     print("Simulation started")
     sim = Simulator(CellSpace(x, y, burn_x, burn_y, temperature, wind_dir, wind_speed))
-    sim.setTerminationTime(100)
+    sim.setTerminationTime(750)
     # sim.setCell(x, y, cell_file="./simout/celltrace", multifile=False)
     sim.setCell(x, y, cell_file="./examples/FireSpreadModel/simout/celltrace-%05d", multifile=True)
     sim.simulate()
